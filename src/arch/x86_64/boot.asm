@@ -22,6 +22,16 @@ start:
     hlt
 
 
+check_multiboot:
+    cmp eax, 0x36d76289
+    jne .no_multiboot
+    ret
+
+.no_multiboot:
+    mov al, "0"
+    jmp error
+
+
 check_cpuid:
     ; Check if CPUID is supported by attempting to flip the ID bit (bit 21)
     ; in the FLAGS register. If we can flip it, CPUID is available.
@@ -59,15 +69,6 @@ check_cpuid:
     jmp error
 
 
-check_multiboot:
-    cmp eax, 0x36d76289
-    jne .no_multiboot
-    ret
-
-.no_multiboot:
-    mov al, "0"
-    jmp error
-
 check_long_mode:
     ; test if extended processor info in available
     mov eax, 0x80000000    ; implicit argument for cpuid
@@ -86,8 +87,17 @@ check_long_mode:
     jmp error
 
 
-
 set_up_page_tables:
+    ; map first P4 entry to P3 table
+    mov eax, p3_table
+    or eax, 0b11 ; present + writable
+    mov [p4_table], eax
+
+    ; map first P3 entry to P2 table
+    mov eax, p2_table
+    or eax, 0b11 ; present + writable
+    mov [p3_table], eax
+
     ; map each P2 entry to a huge 2MiB page
     mov ecx, 0         ; counter variable
 
@@ -103,6 +113,7 @@ set_up_page_tables:
     jne .map_p2_table  ; else map the next entry
 
     ret
+
 
 enable_paging:
     ; load P4 to cr3 register (cpu uses this to access the P4 table)
@@ -127,14 +138,6 @@ enable_paging:
 
     ret
 
-section .rodata
-gdt64:
-    dq 0 ; zero entry
-.code: equ $ - gdt64 ; new
-    dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
-.pointer:
-    dw $ - gdt64 - 1
-    dq gdt64
 
 ; Prints `ERR: ` and the given error code to screen and hangs.
 ; parameter: error code (in ascii) in al
@@ -146,7 +149,6 @@ error:
     hlt
 
 
-
 section .bss
 align 4096
 p4_table:
@@ -155,7 +157,16 @@ p3_table:
     resb 4096
 p2_table:
     resb 4096
-
 stack_bottom:
     resb 64
 stack_top:
+
+
+section .rodata
+gdt64:
+    dq 0 ; zero entry
+.code: equ $ - gdt64 ; new
+    dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
+.pointer:
+    dw $ - gdt64 - 1
+    dq gdt64
