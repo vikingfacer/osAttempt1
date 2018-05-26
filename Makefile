@@ -12,7 +12,7 @@ assembly_source_files := $(wildcard src/arch/$(arch)/*.asm)
 assembly_object_files := $(patsubst src/arch/$(arch)/%.asm, \
 	build/arch/$(arch)/%.o, $(assembly_source_files))
 
-.PHONY: all clean run iso kernel 
+.PHONY: all clean run iso kernel
 
 all: $(kernel)
 
@@ -21,7 +21,7 @@ clean:
 	@xargo clean
 
 run: $(iso)
-	@qemu-system-x86_64 -cdrom $(iso)
+	@qemu-system-x86_64 -cdrom  $(iso)
 
 iso: $(iso)
 
@@ -29,7 +29,7 @@ $(iso): $(kernel) $(grub_cfg)
 	@mkdir -p build/isofiles/boot/grub
 	@cp $(kernel) build/isofiles/boot/$(kern)
 	@cp $(grub_cfg) build/isofiles/boot/grub
-	@grub-mkrescue -o $(iso) build/isofiles 
+	@grub-mkrescue -o $(iso) build/isofiles
 
 # @rm -r build/isofiles
 
