@@ -8,6 +8,10 @@ extern crate volatile;
 extern crate rlibc;
 extern crate spin;
 extern crate multiboot2;
+extern crate x86_64;
+
+#[macro_use]
+extern crate bitflags;
 
 #[macro_use]
 mod vga_buffer;
@@ -16,11 +20,11 @@ mod memory;
 
 #[no_mangle]
 pub extern fn rust_main(multiboot_information_address: usize) {
-    // ATTENTION: we have a very small stack and no guard page
+        use memory::FrameAllocator;
 
-    use core::fmt::Write;
     vga_buffer::clear_screen();
-    vga_buffer::WRITER.lock().write_str("Hello worrrrlddd!!!");
+    println!("what is gucci??{}", "!" );
+
     let boot_info = unsafe{ multiboot2::load(multiboot_information_address) };
     let memory_map_tag = boot_info.memory_map_tag()
         .expect("Memory map tag required");
@@ -56,6 +60,7 @@ pub extern fn rust_main(multiboot_information_address: usize) {
         multiboot_end, memory_map_tag.memory_areas());
 
     println!("{:?}", frame_allocator.allocate_frame());
+    memory::test_paging(&mut frame_allocator);
 
     for i in 0.. {
         if let None = frame_allocator.allocate_frame() {
@@ -63,11 +68,12 @@ pub extern fn rust_main(multiboot_information_address: usize) {
             break;
         }
     }
-    
+
     loop{}
 }
 
 #[lang = "eh_personality"] #[no_mangle] pub extern fn eh_personality() {}
+
 #[lang = "panic_fmt"]
 #[no_mangle]
 pub extern fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str,
