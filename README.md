@@ -45,3 +45,25 @@
 	* qemu-run `qemu-system-x86_64 -cdrom $(iso)`
 
 	* building rust os  `RUST_TARGET_PATH=$(pwd) xargo build --target=x86_64-blog_os`
+	
+## Messaging Commands ## 
+	# grammar #
+	
+	* Message   ::= { Interface + dterm }
+	* Interface ::= { I | i | S | s }
+	* dterm	    ::= { dev +  LCDmsg | PinAction | degree  }
+	* dev       ::= { devPin | LCD }
+	* devPin    ::= { PinType + Pin }
+	* PinType   ::= { D | d | A | a | S | s }
+	* Pin       ::= { u8 int }
+	* LCD       ::= { L | l }
+	* LCDmsg    ::= { char* }
+	* PinAction ::= { mode + payload }
+	* mode      ::= { W | w | R | r }
+	* payload   ::= {u8 int }
+	* degreee   ::= {u8 int }
+
+	
+	
+	
+	
